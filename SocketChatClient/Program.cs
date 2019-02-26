@@ -6,7 +6,18 @@ namespace SocketChatClient
     {
         static void Main(string[] args)
         {
-            MainControl.Run().Wait();
+            try
+            {
+                using (var mc = new MainControl())
+                {
+                    mc.Run(4242).Wait();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }

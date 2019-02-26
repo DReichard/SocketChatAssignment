@@ -10,7 +10,7 @@ namespace SocketChatServer
             {
                 using (var mc = new MainControl())
                 {
-                    mc.Run().Wait();
+                    mc.Run(4242, 50000).Wait();
                 }
             }
             catch (Exception e)

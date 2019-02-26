@@ -12,15 +12,13 @@ namespace SocketChatServer
 {
     public class MainControl: IDisposable
     {
-        private const int BacklogSize = 50000;
-        private const int Port = 4242;
         private Socket _socket;
 
         public static ManualResetEvent allDone = new ManualResetEvent(false);
 
-        public async Task Run()
+        public async Task Run(int port, int backlogSize)
         {
-            _socket = await EstablishEndpoint();
+            _socket = await EstablishEndpoint(port, backlogSize);
             var test = new ManualResetEvent(false);
             while (true)
             {
@@ -38,8 +36,10 @@ namespace SocketChatServer
             var handler = listener.EndAccept(asyncResult);
 
             // Create the state object.  
-            var state = new StateObject();
-            state.WorkSocket = handler;
+            var state = new StateObject
+            {
+                WorkSocket = handler
+            };
             handler.BeginReceive(state.Buffer, 0, state.BufferSize, 0,
                 new AsyncCallback(ReadCallback), state);
         }
@@ -72,7 +72,7 @@ namespace SocketChatServer
                     Console.WriteLine("Read {0} bytes from socket. \n Data : {1}",
                         content.Length, content);
                     // Echo the data back to the client.  
-                    Send(handler, content);
+                    Utilities.Send(handler, content, SendCallback);
                 }
                 else
                 {
@@ -88,7 +88,7 @@ namespace SocketChatServer
             try
             {
                 // Retrieve the socket from the state object.  
-                Socket handler = (Socket)ar.AsyncState;
+                var handler = (Socket)ar.AsyncState;
 
                 // Complete sending the data to the remote device.  
                 int bytesSent = handler.EndSend(ar);
@@ -96,7 +96,6 @@ namespace SocketChatServer
 
                 handler.Shutdown(SocketShutdown.Both);
                 handler.Close();
-
             }
             catch (Exception e)
             {
@@ -104,30 +103,21 @@ namespace SocketChatServer
             }
         }
 
-        private static void Send(Socket handler, String data)
-        {
-            // Convert the string data to byte data using ASCII encoding.  
-            byte[] byteData = Encoding.ASCII.GetBytes(data);
-
-            // Begin sending the data to the remote device.  
-            handler.BeginSend(byteData, 0, byteData.Length, 0,
-                new AsyncCallback(SendCallback), handler);
-        }
-
-        private Task<Socket> EstablishEndpoint()
+        private Task<Socket> EstablishEndpoint(int port, int backLogSize)
         {
             var ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
             var ipAddress = ipHostInfo?.AddressList?.FirstOrDefault() ??
                 throw new InvalidOperationException("IP address not found");
-            var localEndPoint = new IPEndPoint(ipAddress, Port);
+            var localEndPoint = new IPEndPoint(ipAddress, port);
             var socket = new Socket(ipAddress.AddressFamily,
             SocketType.Stream, ProtocolType.Tcp);
             try
             {
                 socket.Bind(localEndPoint);
-                socket.Listen(BacklogSize);
+                socket.Listen(backLogSize);
                 return Task.FromResult(socket);
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 if (socket.IsBound)
                 {
