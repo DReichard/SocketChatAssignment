@@ -10,9 +10,10 @@ using System.Threading.Tasks;
 
 namespace SocketChatClient
 {
-    public class MainControl : IDisposable
+    public class SocketClient : IDisposable
     {
         private Socket _socket;
+        private Dictionary<StateObject, string> _responses;
 
         private static ManualResetEvent connectDone =
         new ManualResetEvent(false);
@@ -21,25 +22,31 @@ namespace SocketChatClient
         private static ManualResetEvent receiveDone =
             new ManualResetEvent(false);
 
-        private static string response = string.Empty;
-
-        public async Task Run(int port)
+        public SocketClient(int port)
         {
-            _socket = await EstablishEndpoint(port);
-            // Send test data to the remote device.  
-            Utilities.Send(_socket, "This is a test<EOF>", SendCallback);
+            _responses = new Dictionary<StateObject, string>();
+            _socket = EstablishEndpoint(port).Result;
+        }
+
+        public Task<string> Run(string message)
+        {
+            // Send test data to the remote device.
+            var stateObj = new StateObject
+            {
+                WorkSocket = _socket
+            };
+            Utilities.Send(_socket, message + "<EOF>", SendCallback, stateObj);
             sendDone.WaitOne();
 
             // Receive the response from the remote device.  
-            Receive(_socket);
+            Receive(_socket, stateObj);
             receiveDone.WaitOne();
 
-            // Write the response to the console.  
-            Console.WriteLine("Response received : {0}", response);
-
-            // Release the socket.  
-            _socket.Shutdown(SocketShutdown.Both);
-            _socket.Close();
+            // Write the response to the console. 
+            var res = _responses[stateObj];
+            Console.WriteLine("Response received : {0}", res);
+            _responses.Remove(stateObj);
+            return Task.FromResult(res);
         }
 
         private Task<Socket> EstablishEndpoint(int port)
@@ -47,11 +54,14 @@ namespace SocketChatClient
             var ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
             var ipAddress = ipHostInfo?.AddressList?.FirstOrDefault() ??
                 throw new InvalidOperationException("IP address not found");
-            var localEndPoint = new IPEndPoint(ipAddress, port);
+            var remoteEndPoint = new IPEndPoint(ipAddress, port);
             var socket = new Socket(ipAddress.AddressFamily,
             SocketType.Stream, ProtocolType.Tcp);
             try
             {
+                socket.BeginConnect(remoteEndPoint,
+                     new AsyncCallback(ConnectCallback), socket);
+                connectDone.WaitOne();
                 return Task.FromResult(socket);
             }
             catch (Exception)
@@ -64,12 +74,12 @@ namespace SocketChatClient
             }
         }
 
-        private static void SendCallback(IAsyncResult ar)
+        private void SendCallback(IAsyncResult ar)
         {
             try
             {
                 // Retrieve the socket from the state object.  
-                var client = (Socket)ar.AsyncState;
+                var client = ((StateObject)ar.AsyncState).WorkSocket;
 
                 // Complete sending the data to the remote device.  
                 var bytesSent = client.EndSend(ar);
@@ -84,7 +94,7 @@ namespace SocketChatClient
             }
         }
 
-        private static void ConnectCallback(IAsyncResult ar)
+        private void ConnectCallback(IAsyncResult ar)
         {
             try
             {
@@ -106,12 +116,12 @@ namespace SocketChatClient
             }
         }
 
-        private static void Receive(Socket client)
+        private void Receive(Socket client, StateObject state)
         {
             try
             {
                 // Create the state object.  
-                StateObject state = new StateObject();
+                //StateObject state = new StateObject();
                 state.WorkSocket = client;
 
                 // Begin receiving the data from the remote device.  
@@ -124,7 +134,7 @@ namespace SocketChatClient
             }
         }
 
-        private static void ReceiveCallback(IAsyncResult ar)
+        private void ReceiveCallback(IAsyncResult ar)
         {
             try
             {
@@ -150,7 +160,7 @@ namespace SocketChatClient
                     // All the data has arrived; put it in response.  
                     if (state.Sb.Length > 1)
                     {
-                        response = state.Sb.ToString();
+                        _responses.Add(state, state.Sb.ToString());
                     }
                     // Signal that all bytes have been received.  
                     receiveDone.Set();
@@ -163,6 +173,7 @@ namespace SocketChatClient
         }
         public void Dispose()
         {
+            _socket?.Shutdown(SocketShutdown.Both);
             _socket?.Close();
             _socket?.Dispose();
         }

@@ -72,7 +72,7 @@ namespace SocketChatServer
                     Console.WriteLine("Read {0} bytes from socket. \n Data : {1}",
                         content.Length, content);
                     // Echo the data back to the client.  
-                    Utilities.Send(handler, content, SendCallback);
+                    Utilities.Send(handler, content, SendCallback, state);
                 }
                 else
                 {
@@ -88,7 +88,7 @@ namespace SocketChatServer
             try
             {
                 // Retrieve the socket from the state object.  
-                var handler = (Socket)ar.AsyncState;
+                var handler = ((StateObject)ar.AsyncState).WorkSocket;
 
                 // Complete sending the data to the remote device.  
                 int bytesSent = handler.EndSend(ar);

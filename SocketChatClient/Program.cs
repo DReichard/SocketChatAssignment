@@ -8,9 +8,9 @@ namespace SocketChatClient
         {
             try
             {
-                using (var mc = new MainControl())
+                using (var mc = new SocketClient(4242))
                 {
-                    mc.Run(4242).Wait();
+                    mc.Run("test").Wait();
                 }
             }
             catch (Exception e)
