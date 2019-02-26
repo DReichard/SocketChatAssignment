@@ -6,7 +6,18 @@ namespace SocketChatServer
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            try
+            {
+                using (var mc = new MainControl())
+                {
+                    mc.Run().Wait();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }

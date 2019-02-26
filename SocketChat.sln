@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2042
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketChatServer", "SocketChatServer\SocketChatServer.csproj", "{CB3E84B2-EE0D-4095-B9BC-42313C5890AF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SocketChatServer", "SocketChatServer\SocketChatServer.csproj", "{CB3E84B2-EE0D-4095-B9BC-42313C5890AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketChatClient", "SocketChatClient\SocketChatClient.csproj", "{FD8E96A6-AA0E-4DCA-B7FD-CECD36BE0DA0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{49E06394-6E8E-4A93-B4F5-D61421362332}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{CB3E84B2-EE0D-4095-B9BC-42313C5890AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB3E84B2-EE0D-4095-B9BC-42313C5890AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CB3E84B2-EE0D-4095-B9BC-42313C5890AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD8E96A6-AA0E-4DCA-B7FD-CECD36BE0DA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD8E96A6-AA0E-4DCA-B7FD-CECD36BE0DA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD8E96A6-AA0E-4DCA-B7FD-CECD36BE0DA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD8E96A6-AA0E-4DCA-B7FD-CECD36BE0DA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49E06394-6E8E-4A93-B4F5-D61421362332}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49E06394-6E8E-4A93-B4F5-D61421362332}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49E06394-6E8E-4A93-B4F5-D61421362332}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49E06394-6E8E-4A93-B4F5-D61421362332}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
