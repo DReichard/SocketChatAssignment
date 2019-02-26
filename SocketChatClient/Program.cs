@@ -1,5 +1,5 @@
 ﻿using System;
-
+using Common;
 namespace SocketChatClient
 {
     class Program
@@ -10,7 +10,7 @@ namespace SocketChatClient
             {
                 using (var mc = new SocketClient(4242))
                 {
-                    mc.Run("test").Wait();
+                    mc.Send("test").Wait();
                 }
             }
             catch (Exception e)
