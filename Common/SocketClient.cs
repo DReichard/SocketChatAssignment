@@ -39,7 +39,9 @@ namespace Common
             Receive(_socket, stateObj);
             receiveDone.WaitOne();
             var res = _responses[stateObj];
-            Console.WriteLine("Response received : {0}", res);
+            //Console.WriteLine("Response received : {0}", res);
+            res = res.Replace("<EOF>", "");
+            Console.WriteLine(res);
             _responses.Remove(stateObj);
             return res;
         }
@@ -75,7 +77,7 @@ namespace Common
             {
                 var client = ((StateObject)ar.AsyncState).WorkSocket;
                 var bytesSent = client.EndSend(ar);
-                Console.WriteLine("Sent {0} bytes to server.", bytesSent);
+                //Console.WriteLine("Sent {0} bytes to server.", bytesSent);
                 sendDone.Set();
             }
             catch (Exception e)
@@ -91,8 +93,8 @@ namespace Common
                 var client = (Socket)ar.AsyncState;
                 client.EndConnect(ar);
 
-                Console.WriteLine("Socket connected to {0}",
-                    client.RemoteEndPoint.ToString());
+                //Console.WriteLine("Socket connected to {0}",
+                //    client.RemoteEndPoint.ToString());
                 connectDone.Set();
             }
             catch (Exception e)

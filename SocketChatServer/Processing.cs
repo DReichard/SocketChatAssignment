@@ -15,7 +15,7 @@ namespace SocketChatServer
 
         public string Process(string input)
         {
-            return $"ACK {input}";
+            return $"{DateTime.Now} {input}";
         }
     }
 }

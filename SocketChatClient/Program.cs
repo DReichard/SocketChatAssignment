@@ -9,20 +9,9 @@ namespace SocketChatClient
         {
             try
             {
-                using (var mc = new SocketClient(4242))
+                using (var chat = new ChatClient())
                 {
-                    while (true)
-                    {
-                        try
-                        {
-                            mc.SendSingle("Test B").Wait();
-                            Thread.Sleep(1000);
-                        } 
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e);
-                        }
-                    }
+                    chat.Start();
                 }
             }
             catch (Exception e)
