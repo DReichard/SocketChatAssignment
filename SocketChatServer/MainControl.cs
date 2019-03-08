@@ -10,12 +10,19 @@ using System.Threading.Tasks;
 
 namespace SocketChatServer
 {
-    public class MainControl: IDisposable
+    public delegate string ProcessingCallback(string input);
+
+    public class SocketEndpoint: IDisposable
     {
         private Socket _socket;
-
+        private ProcessingCallback _processingCallback;
         public static ManualResetEvent allDone = new ManualResetEvent(false);
 
+        public SocketEndpoint(Func<string, string> callback)
+        {
+            _processingCallback = new ProcessingCallback(callback);
+        }
+        
         public async Task Run(int port, int backlogSize)
         {
             _socket = await EstablishEndpoint(port, backlogSize);
@@ -29,7 +36,7 @@ namespace SocketChatServer
             }
         }
 
-        public static void AcceptCallback(IAsyncResult asyncResult)
+        public void AcceptCallback(IAsyncResult asyncResult)
         {
             allDone.Set();
             var listener = (Socket)asyncResult.AsyncState;
@@ -44,7 +51,7 @@ namespace SocketChatServer
                 new AsyncCallback(ReadCallback), state);
         }
 
-        public static void ReadCallback(IAsyncResult ar)
+        public void ReadCallback(IAsyncResult ar)
         {
             var content = String.Empty;
 
@@ -71,8 +78,9 @@ namespace SocketChatServer
                     // client. Display it on the console.  
                     Console.WriteLine("Read {0} bytes from socket. \n Data : {1}",
                         content.Length, content);
-                    // Echo the data back to the client.  
-                    Utilities.Send(handler, content, SendCallback, state);
+                    // Echo the data back to the client. 
+                    var res = _processingCallback(content);
+                    Utilities.Send(handler, res, SendCallback, state);
                 }
                 else
                 {
@@ -83,7 +91,7 @@ namespace SocketChatServer
             }
         }
 
-        private static void SendCallback(IAsyncResult ar)
+        private void SendCallback(IAsyncResult ar)
         {
             try
             {

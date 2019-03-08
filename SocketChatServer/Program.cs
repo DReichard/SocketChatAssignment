@@ -8,7 +8,9 @@ namespace SocketChatServer
         {
             try
             {
-                using (var mc = new MainControl())
+                var processor = new Processor();
+
+                using (var mc = new SocketEndpoint(processor.Process))
                 {
                     mc.Run(4242, 50000).Wait();
                 }

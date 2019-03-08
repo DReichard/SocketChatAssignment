@@ -15,7 +15,8 @@ namespace SocketChatClient
                     {
                         try
                         {
-                            mc.SendSingle("test").Wait();
+                            mc.SendSingle("Test B").Wait();
+                            Thread.Sleep(1000);
                         } 
                         catch (Exception e)
                         {
