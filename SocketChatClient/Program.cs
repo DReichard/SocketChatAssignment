@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Common;
 namespace SocketChatClient
 {
@@ -10,7 +11,17 @@ namespace SocketChatClient
             {
                 using (var mc = new SocketClient(4242))
                 {
-                    mc.Send("test").Wait();
+                    while (true)
+                    {
+                        try
+                        {
+                            mc.SendSingle("test").Wait();
+                        } 
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+                    }
                 }
             }
             catch (Exception e)

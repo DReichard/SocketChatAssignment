@@ -13,6 +13,7 @@ namespace Common
     public class SocketClient : IDisposable
     {
         private Socket _socket;
+        private readonly int _port;
         private Dictionary<StateObject, string> _responses;
         private ManualResetEvent connectDone = new ManualResetEvent(false);
         private ManualResetEvent sendDone = new ManualResetEvent(false);
@@ -21,23 +22,26 @@ namespace Common
         public SocketClient(int port)
         {
             _responses = new Dictionary<StateObject, string>();
-            _socket = EstablishEndpoint(port).Result;
+            _port = port;
         }
 
-        public Task<string> Send(string message)
+        public async Task<string> SendSingle(string message)
         {
+            _socket = await EstablishEndpoint(_port);
             var stateObj = new StateObject
             {
                 WorkSocket = _socket
             };
+            sendDone.Reset();
             Utilities.Send(_socket, message + "<EOF>", SendCallback, stateObj);
             sendDone.WaitOne();
+            receiveDone.Reset();
             Receive(_socket, stateObj);
             receiveDone.WaitOne();
             var res = _responses[stateObj];
             Console.WriteLine("Response received : {0}", res);
             _responses.Remove(stateObj);
-            return Task.FromResult(res);
+            return res;
         }
 
         private Task<Socket> EstablishEndpoint(int port)
@@ -49,6 +53,7 @@ namespace Common
             var socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             try
             {
+                connectDone.Reset();
                 socket.BeginConnect(remoteEndPoint,
                      new AsyncCallback(ConnectCallback), socket);
                 connectDone.WaitOne();
