@@ -10,8 +10,11 @@ using System.Threading.Tasks;
 
 namespace Common
 {
+    public delegate string ProcessingCallback(string input);
+
     public class SocketClient : IDisposable
     {
+        private ProcessingCallback _processingCallback;
         private Socket _socket;
         private readonly int _port;
         private Dictionary<StateObject, string> _responses;
@@ -19,8 +22,9 @@ namespace Common
         private ManualResetEvent sendDone = new ManualResetEvent(false);
         private ManualResetEvent receiveDone = new ManualResetEvent(false);
 
-        public SocketClient(int port)
+        public SocketClient(int port, Func<string, string> callback)
         {
+            _processingCallback = new ProcessingCallback(callback);
             _responses = new Dictionary<StateObject, string>();
             _port = port;
         }
@@ -39,9 +43,9 @@ namespace Common
             Receive(_socket, stateObj);
             receiveDone.WaitOne();
             var res = _responses[stateObj];
-            //Console.WriteLine("Response received : {0}", res);
-            res = res.Replace("<EOF>", "");
-            Console.WriteLine(res);
+
+            _processingCallback(res);
+
             _responses.Remove(stateObj);
             return res;
         }

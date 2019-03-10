@@ -2,28 +2,29 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SocketChatClient
 {
-    class ChatClient: IDisposable
+    public class ChatClient: IDisposable
     {
         private readonly SocketClient _socketClient;
         private string _userName;
 
-        public ChatClient()
+        public ChatClient(int port, Func<string, string> callback)
         {
-            _socketClient = new SocketClient(4242);
+            _socketClient = new SocketClient(port, callback);
+            Console.WriteLine($"Sending to {port}");
         }
         public void Start()
         {
+            Task.Delay(1000).Wait();
             _userName = GetUserName();
             while (true)
             {
                 var message = Console.ReadLine();
-                for (var i = 0; i < message.Length; i++) {
-                    Console.Write("\b");
-                }
-                Console.Write("\b");
+                ClearCurrentConsoleLine();
+
                 _socketClient.SendSingle($"{_userName}: {message}").Wait();
             }
         }
@@ -32,6 +33,15 @@ namespace SocketChatClient
         {
             Console.WriteLine("Enter Username:");
             return Console.ReadLine();
+        }
+
+        private static void ClearCurrentConsoleLine()
+        {
+            Console.SetCursorPosition(0, Console.CursorTop - 1);
+            var currentLineCursor = Console.CursorTop;
+            Console.SetCursorPosition(0, Console.CursorTop);
+            Console.Write(new string(' ', Console.WindowWidth));
+            Console.SetCursorPosition(0, currentLineCursor);
         }
 
         public void Dispose()

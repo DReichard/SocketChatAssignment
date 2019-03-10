@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SocketChatServer
+namespace SocketListener
 {
     public delegate string ProcessingCallback(string input);
 
@@ -23,14 +23,18 @@ namespace SocketChatServer
             _processingCallback = new ProcessingCallback(callback);
         }
         
-        public async Task Run(int port, int backlogSize)
+        public async Task Run(int port, int backlogSize, CancellationToken token)
         {
             _socket = await EstablishEndpoint(port, backlogSize);
-            var test = new ManualResetEvent(false);
+            Console.WriteLine($"Listening at {port}");
             while (true)
             {
+                if (token.IsCancellationRequested)
+                {
+                    Dispose();
+                    return;
+                }
                 allDone.Reset();
-                Console.WriteLine("Waiting for a connection...");
                 _socket.BeginAccept(new AsyncCallback(AcceptCallback), _socket);
                 allDone.WaitOne();
             }
@@ -76,8 +80,7 @@ namespace SocketChatServer
                 {
                     // All the data has been read from the   
                     // client. Display it on the console.  
-                    Console.WriteLine("Read {0} bytes from socket. \n Data : {1}",
-                        content.Length, content);
+                    Console.WriteLine($"{DateTime.Now.TimeOfDay} {content.Replace("<EOF>", "")}");
                     // Echo the data back to the client. 
                     var res = _processingCallback(content);
                     Send(handler, res, SendCallback, state);
@@ -99,8 +102,8 @@ namespace SocketChatServer
                 var handler = ((StateObject)ar.AsyncState).WorkSocket;
 
                 // Complete sending the data to the remote device.  
-                int bytesSent = handler.EndSend(ar);
-                Console.WriteLine("Sent {0} bytes to client.", bytesSent);
+                var bytesSent = handler.EndSend(ar);
+                //Console.WriteLine("Sent {0} bytes to client.", bytesSent);
 
                 handler.Shutdown(SocketShutdown.Both);
                 handler.Close();
