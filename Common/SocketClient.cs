@@ -44,7 +44,7 @@ namespace Common
             receiveDone.WaitOne();
             var res = _responses[stateObj];
 
-            _processingCallback(res);
+            Console.WriteLine(res.Replace("<EOF>", ""));
 
             _responses.Remove(stateObj);
             return res;
@@ -52,10 +52,7 @@ namespace Common
 
         private void Send(Socket socket, string data, Action<IAsyncResult> sendCallback, StateObject stateObject)
         {
-            // Convert the string data to byte data using ASCII encoding.  
             var byteData = Encoding.ASCII.GetBytes(data);
-
-            // Begin sending the data to the remote device.  
             socket.BeginSend(byteData, 0, byteData.Length, 0,
                 new AsyncCallback(sendCallback), stateObject);
         }
@@ -91,7 +88,6 @@ namespace Common
             {
                 var client = ((StateObject)ar.AsyncState).WorkSocket;
                 var bytesSent = client.EndSend(ar);
-                //Console.WriteLine("Sent {0} bytes to server.", bytesSent);
                 sendDone.Set();
             }
             catch (Exception e)
@@ -106,9 +102,6 @@ namespace Common
             {
                 var client = (Socket)ar.AsyncState;
                 client.EndConnect(ar);
-
-                //Console.WriteLine("Socket connected to {0}",
-                //    client.RemoteEndPoint.ToString());
                 connectDone.Set();
             }
             catch (Exception e)
@@ -121,7 +114,6 @@ namespace Common
         {
             try
             {
-                //StateObject state = new StateObject();
                 state.WorkSocket = client;
                 client.BeginReceive(state.Buffer, 0, state.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
             }
