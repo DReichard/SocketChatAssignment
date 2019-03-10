@@ -33,7 +33,7 @@ namespace Common
                 WorkSocket = _socket
             };
             sendDone.Reset();
-            Utilities.Send(_socket, message + "<EOF>", SendCallback, stateObj);
+            Send(_socket, message + "<EOF>", SendCallback, stateObj);
             sendDone.WaitOne();
             receiveDone.Reset();
             Receive(_socket, stateObj);
@@ -44,6 +44,16 @@ namespace Common
             Console.WriteLine(res);
             _responses.Remove(stateObj);
             return res;
+        }
+
+        private void Send(Socket socket, string data, Action<IAsyncResult> sendCallback, StateObject stateObject)
+        {
+            // Convert the string data to byte data using ASCII encoding.  
+            var byteData = Encoding.ASCII.GetBytes(data);
+
+            // Begin sending the data to the remote device.  
+            socket.BeginSend(byteData, 0, byteData.Length, 0,
+                new AsyncCallback(sendCallback), stateObject);
         }
 
         private Task<Socket> EstablishEndpoint(int port)

@@ -10,7 +10,7 @@ namespace SocketChatServer
             {
                 var processor = new Processor();
 
-                using (var mc = new SocketEndpoint(processor.Process))
+                using (var mc = new SocketListener(processor.Process))
                 {
                     mc.Run(4242, 50000).Wait();
                 }

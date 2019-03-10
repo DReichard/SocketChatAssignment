@@ -12,13 +12,13 @@ namespace SocketChatServer
 {
     public delegate string ProcessingCallback(string input);
 
-    public class SocketEndpoint: IDisposable
+    public class SocketListener: IDisposable
     {
         private Socket _socket;
         private ProcessingCallback _processingCallback;
         public static ManualResetEvent allDone = new ManualResetEvent(false);
 
-        public SocketEndpoint(Func<string, string> callback)
+        public SocketListener(Func<string, string> callback)
         {
             _processingCallback = new ProcessingCallback(callback);
         }
@@ -80,7 +80,7 @@ namespace SocketChatServer
                         content.Length, content);
                     // Echo the data back to the client. 
                     var res = _processingCallback(content);
-                    Utilities.Send(handler, res, SendCallback, state);
+                    Send(handler, res, SendCallback, state);
                 }
                 else
                 {
@@ -109,6 +109,16 @@ namespace SocketChatServer
             {
                 Console.WriteLine(e.ToString());
             }
+        }
+
+        private void Send(Socket socket, string data, Action<IAsyncResult> sendCallback, StateObject stateObject)
+        {
+            // Convert the string data to byte data using ASCII encoding.  
+            var byteData = Encoding.ASCII.GetBytes(data);
+
+            // Begin sending the data to the remote device.  
+            socket.BeginSend(byteData, 0, byteData.Length, 0,
+                new AsyncCallback(sendCallback), stateObject);
         }
 
         private Task<Socket> EstablishEndpoint(int port, int backLogSize)
