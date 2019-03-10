@@ -29,7 +29,7 @@ namespace Common
             _port = port;
         }
 
-        public async Task<string> SendSingle(string message)
+        public async Task<string> SendSingle(byte[] message)
         {
             _socket = await EstablishEndpoint(_port);
             var stateObj = new StateObject
@@ -37,7 +37,7 @@ namespace Common
                 WorkSocket = _socket
             };
             sendDone.Reset();
-            Send(_socket, message + "<EOF>", SendCallback, stateObj);
+            Send(_socket, message, SendCallback, stateObj);
             sendDone.WaitOne();
             receiveDone.Reset();
             Receive(_socket, stateObj);
@@ -50,10 +50,10 @@ namespace Common
             return res;
         }
 
-        private void Send(Socket socket, string data, Action<IAsyncResult> sendCallback, StateObject stateObject)
+        private void Send(Socket socket, byte[] data, Action<IAsyncResult> sendCallback, StateObject stateObject)
         {
-            var byteData = Encoding.ASCII.GetBytes(data);
-            socket.BeginSend(byteData, 0, byteData.Length, 0,
+            //var byteData = Encoding.ASCII.GetBytes(data);
+            socket.BeginSend(data, 0, data.Length, 0,
                 new AsyncCallback(sendCallback), stateObject);
         }
 
@@ -133,7 +133,7 @@ namespace Common
 
                 if (bytesRead > 0)
                 { 
-                    state.Sb.Append(Encoding.ASCII.GetString(state.Buffer, 0, bytesRead));
+                    state.Sb.Append(Encoding.UTF8.GetString(state.Buffer, 0, bytesRead));
                     client.BeginReceive(state.Buffer, 0, state.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
                 }
                 else

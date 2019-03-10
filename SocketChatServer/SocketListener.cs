@@ -62,13 +62,14 @@ namespace SocketListener
 
             if (bytesRead > 0)
             {
-                state.Sb.Append(Encoding.ASCII.GetString(
+                state.Sb.Append(Encoding.UTF8.GetString(
                     state.Buffer, 0, bytesRead));
-                content = state.Sb.ToString();
+                content = EncryptionProvider.Decrypt(TrimZeroBytes(state.Buffer), "HardcodedKey");
                 if (content.IndexOf("<EOF>") > -1)
                 {
-                    Console.WriteLine($"{DateTime.Now.TimeOfDay} {content.Replace("<EOF>", "")}");
-                    var res = _processingCallback(content);
+                    var res = content.Replace("<EOF>", "");
+                    Console.WriteLine($"{DateTime.Now.TimeOfDay} {res}");
+                    res = _processingCallback(content);
                     Send(handler, res, SendCallback, state);
                 }
                 else
@@ -97,7 +98,7 @@ namespace SocketListener
 
         private void Send(Socket socket, string data, Action<IAsyncResult> sendCallback, StateObject stateObject)
         {
-            var byteData = Encoding.ASCII.GetBytes(data);
+            var byteData = Encoding.UTF8.GetBytes(data);
             socket.BeginSend(byteData, 0, byteData.Length, 0,
                 new AsyncCallback(sendCallback), stateObject);
         }
@@ -109,7 +110,7 @@ namespace SocketListener
                 throw new InvalidOperationException("IP address not found");
             var localEndPoint = new IPEndPoint(ipAddress, port);
             var socket = new Socket(ipAddress.AddressFamily,
-            SocketType.Stream, ProtocolType.Tcp);
+                SocketType.Stream, ProtocolType.Tcp);
             try
             {
                 socket.Bind(localEndPoint);
@@ -130,6 +131,18 @@ namespace SocketListener
         {
             _socket?.Close();
             _socket?.Dispose();
+        }
+
+        private byte[] TrimZeroBytes(byte[] packet)
+        {
+            var i = packet.Length - 1;
+            while (packet[i] == 0)
+            {
+                --i;
+            }
+            var temp = new byte[i + 1];
+            Array.Copy(packet, temp, i + 1);
+            return temp;
         }
     }
 }

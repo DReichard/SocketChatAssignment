@@ -23,9 +23,11 @@ namespace SocketChatClient
             while (true)
             {
                 var message = Console.ReadLine();
+                var messageEncrypted = EncryptionProvider.Encrypt($"{_userName}: {message}<EOF>", "HardcodedKey");
+                //message = Encoding.UTF8.GetString(messageEncrypted);
                 ClearCurrentConsoleLine();
 
-                _socketClient.SendSingle($"{_userName}: {message}").Wait();
+                _socketClient.SendSingle(messageEncrypted).Wait();
             }
         }
 
